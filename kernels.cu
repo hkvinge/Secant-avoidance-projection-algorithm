@@ -83,6 +83,10 @@ __global__ void calculate_secants(float * dsecants_out, float * dpoints_in, int 
 
 // Take a matrix and return a vector whose entries are the l2 norms of the matrix
 __global__ void calculate_col_norms(float * dprojected_secants, float * dsecant_norms, int * dsize_constants_in){
+    /** Take an array, which is assumed to be square (so it has length n^2 for some n)
+        and returns the identity matrix of the same size
+    */
+
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	int proj_dim = dsize_constants_in[2];
 	float sum = 0;
