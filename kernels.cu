@@ -134,3 +134,113 @@ __global__ void make_identity(float * didentity_matrix, int * dsize_constants_in
 		didentity_matrix[idx] = 0.0;
 	}
 }
+
+// Projection adjustment
+__global__ void projection_refinement(float * dworst_secant_norm,float * dprojections,float * dsecant_norms, float * drand_proj, int * dsize_constants_in, float * dfloat_constants_in, float * dwork, float * dprojections_reduced, float * dsecants_out){
+
+	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	int numb_pairs = dsize_constants_in[5];
+	int numb_proj = dsize_constants_in[3];
+	int dim_proj = dsize_constants_in[2];
+	int iterations = dsize_constants_in[4];
+	int current_iteration = dsize_constants_in[6];
+	int image_size = dsize_constants_in[0];
+
+	printf("Entered key kernel");
+
+	// Find smallest norm 
+
+	int smallest_index;
+	float min = 1;
+	for (int i = 0; i < numb_pairs; i++){
+		if (dsecant_norms[i*numb_proj +idx] < min){
+			min = dsecant_norms[i*numb_proj + idx];
+			smallest_index = i;
+		}
+	}
+
+	// Store smallest norm in dworst_secants_norm
+	dworst_secant_norm[iterations*idx + current_iteration] = min;
+
+	// Find the max coefficient on projection
+
+	int max_coefficient_index;
+	float max = 0;
+	for (int i = 0; i < dim_proj; i++){
+		if (fabsf(dprojections[smallest_index*numb_proj*dim_proj + idx*dim_proj + i]) > max){
+			max_coefficient_index = i;
+		}
+	}
+	//printf("The max coefficient index is %d\n",max_coefficient_index);
+
+	// Get projections in order for GM
+
+	// First projection is projection of shortest secant
+	for (int i = 0; i < image_size; i++){
+		dwork[idx*image_size*dim_proj + i] = dprojections_reduced[image_size*smallest_index + i];
+	}
+	// Then add previous projection basis vectors
+	for (int i = 0; i < max_coefficient_index; i++){
+		for (int j = 0; j < image_size; j++){
+			dwork[idx*image_size*dim_proj + image_size*(i+1) + j] = drand_proj[idx*image_size*dim_proj + image_size*i + j];
+		}
+	}
+	// Except that corresponding to the basis vector with biggest component for the smallest secant
+	for (int i = max_coefficient_index+1; i < dim_proj; i++){
+		for (int j = 0; j < image_size; j++){
+			dwork[idx*image_size*dim_proj + image_size*(i-1)+j] = drand_proj[idx*image_size*dim_proj + image_size*i + j];
+		}
+	}
+
+	// Run GM for orthogonality
+	float prod_uv;
+	float prod_uu;
+
+	for (int i = 0; i < image_size; i++){
+		drand_proj[idx*image_size*dim_proj + i] = dwork[idx*image_size*dim_proj + i];
+	}
+	for (int i = 1; i < dim_proj; i++){
+		for (int k = 0; k < image_size; k++){
+			drand_proj[idx*image_size*dim_proj + i*image_size + k] = dwork[idx*image_size*dim_proj + i*image_size + k];
+		} 
+		for (int j = 0; j < i; j++){
+			prod_uv = 0;
+			prod_uu = 0;
+			for (int k = 0; k < image_size; k++){
+				prod_uv = prod_uv + dwork[idx*image_size*dim_proj + i*image_size + k]*dwork[idx*image_size*dim_proj + j*image_size + k];
+			}
+			for (int k = 0; k < image_size; k++){
+				prod_uu = prod_uu + dwork[idx*image_size*dim_proj + j*image_size + k]*dwork[idx*image_size*dim_proj + j*image_size + k];
+			}
+			printf("This is the dot product %f",prod_uu);
+			printf("This is the dot product %f",prod_uv);
+			for (int k = 0; k < image_size; k++){
+				drand_proj[idx*image_size*dim_proj + i*image_size + k] = drand_proj[idx*image_size*dim_proj + i*image_size + k] - (prod_uv/prod_uu)*dwork[idx*image_size*dim_proj + j*image_size + k]; 
+			}
+		}
+	}
+
+	// Run for normality
+	float sum;
+
+	for (int i = 0; i < dim_proj; i++){
+		sum = 0;
+		for (int j = 0; j < image_size; j++){
+			sum = sum + powf(drand_proj[idx*image_size*dim_proj + i*image_size + j],2);
+		}
+		sum = sqrtf(sum);
+		for (int j = 0; j < image_size; j++){
+			drand_proj[idx*image_size*dim_proj + i*image_size + j] = (1/sum)*drand_proj[idx*image_size*dim_proj + i*image_size + j];
+		}
+	}
+
+	// Add remaining vector
+	float alpha = dfloat_constants_in[0];
+	for (int i = 0; i < image_size; i++){
+		drand_proj[idx*image_size*dim_proj + i] = (1-2*alpha)*drand_proj[idx*image_size*dim_proj + i] + alpha*dsecants_out[image_size*smallest_index + i];
+
+	}
+
+}
+
+
