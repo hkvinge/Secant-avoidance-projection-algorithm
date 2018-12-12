@@ -1,35 +1,60 @@
+/*! \file
+*  \brief Custom GPU kernels used in the SAP algorithm
+*
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <cmath>
 #include "kernels.cuh"
 using namespace std;
-		    
 
-// Read entries of vector
-__global__ void readVec(float * dvector_in){
+
+__global__ void readVec(float * d_vector){
+	/**
+	Reads some number (specified by the number of threads at execution)
+	of entries from an array of floats on the device. Useful for debugging.
+
+	@param d_vector The name of the array of floats on the device
+	which the kernel prints entries from. 
+	*/
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	if (idx < 500){
-		printf("The entry at %d is %f\n",idx,dvector_in[idx]);
-	}
+	printf("The entry at %d is %f\n",idx,dvector_in[idx]);
 }
 
-// Read entries of vector (int)
-__global__ void readVecInt(int * dvector_in){
+__global__ void readVecInt(int * d_vector){
+	/**
+	Reads some number (specified by the number of threads at execution)
+	of entries from an array of floats on the device. Useful for debugging.
+
+	@param d_vector The name of the array of floats on the device
+	which the kernel prints entries from. 
+	*/
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	if (idx < 500){
-		printf("The entry at %d is %i\n",idx,dvector_in[idx]);
-	}
+	printf("The entry at %d is %i\n",idx,d_vector[idx]);
 }
 
 // Calculate the secants for a collection of vectors stored as columns in a matrix, then normalize
-__global__ void calculate_secants(float * dsecants_out, float * dpoints_in, int * dsize_constants_in){
+__global__ void calculate_secants(float * d_secants, float * dpoints_in, int * dsize_constants_in){
+	/** 
+	Calculates the normalized secant set for a set of points.
 
+	@param d_secants The secant set for d_points. This is the output.
+	@param d_points The input points.
+	@param d_int_constants An integer array which holds the input dimension 
+	and number of points
+
+	*/
 
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	// Number of points
 	int n = dsize_constants_in[1];
-	int image_size = dsize_constants_in[0];
+	// Input dimension
+	int input_dim = dsize_constants_in[0];
+	// Parameters used to pair points to calculate secants
 	int i = idx % (n-1);
 	int j = (idx - i)/(n-1);
+	// Number of points for given pair
 	int pair1;
 	int pair2;
 	if (i >= j){
@@ -39,17 +64,21 @@ __global__ void calculate_secants(float * dsecants_out, float * dpoints_in, int 
 		pair1 = n-i-1;
 		pair2 = n-j-1;
 	}
-	for (int p = 0; p < image_size; p++){
-		dsecants_out[idx*image_size + p] = dpoints_in[image_size*pair1 + p] - dpoints_in[image_size*pair2 + p];
+	// For loop calculates secant coordinate by coordinate
+	for (int p = 0; p < input_dim; p++){
+		d_secants[idx*input_dim + p] = dpoints_in[input_dim*pair1 + p] - dpoints_in[input_dim*pair2 + p];
 	}
+	// Variable to store the norm of the secant
 	float norm = 0;
-	for (int p = 0; p < image_size; p++){
-		norm = norm + powf(dsecants_out[idx*image_size + p],2);
+	// Iterate through entries of the secant to calculate its norm
+	for (int p = 0; p < input_dim; p++){
+		norm = norm + powf(d_secants[idx*input_dim + p],2);
 	}
 	norm = sqrtf(norm);
+	// As long as the norm is not zero, normalize the secant
 	if (norm != 0.0){
-		for (int p = 0; p < image_size; p++){
-			dsecants_out[idx*image_size + p] = (1/norm)*dsecants_out[idx*image_size + p];
+		for (int p = 0; p < input_dim; p++){
+			d_secants[idx*input_dim + p] = (1/norm)*d_secants[idx*input_dim + p];
 		}
 	}
 }
