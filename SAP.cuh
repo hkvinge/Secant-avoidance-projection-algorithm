@@ -5,5 +5,5 @@
 */
 
 
-int SAP(int input_dim, int numb_points, float * hpoints_in, int proj_dim, float * hproj_out, float * hsmallest_secant_norms, int iterations, float step_size);
+int SAP(int input_dim, int numb_points, float * h_points_in, int proj_dim, float * h_proj, float * h_smallest_secant_norms, int iterations, float step_size);
 
