@@ -6,6 +6,6 @@ In this case, "well" means that the projections preserves the secants between po
 
 This repository contains CUDA code for the SAP algorithm.
 At the moment I am still uploading and restructuring the code. I expect everything to be uploaded 
-and in good shape by mid-October 2018.
+and in good shape by mid-December 2018.
 
 
