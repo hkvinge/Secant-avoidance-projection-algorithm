@@ -35,22 +35,26 @@ __global__ void readVecInt(int * d_vector){
 }
 
 // Calculate the secants for a collection of vectors stored as columns in a matrix, then normalize
-__global__ void calculate_secants(float * d_secants, float * dpoints_in, int * dsize_constants_in){
+__global__ void calculate_secants(float * d_secants, float * dpoints_in, int * d_int_constants){
 	/** 
 	Calculates the normalized secant set for a set of points.
 
-	@param d_secants The secant set for d_points. This is the output.
-	@param d_points The input points.
+	@param d_secants The secant set for d_points. Secants are stored as column
+	vectors so the dimension of this matrix is (dim. of input data x number of
+	secants). This matrix is the output of this kernel.
+	@param d_points The input points stored as column vectors. The dimension
+	of this matrix is (dim. of input data x number of points in data set)..
 	@param d_int_constants An integer array which holds the input dimension 
-	and number of points
+	(the second entry in the array) and number of points (the second 
+	entry in the array)
 
 	*/
 
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
 	// Number of points
-	int n = dsize_constants_in[1];
+	int n = d_int_constants[1];
 	// Input dimension
-	int input_dim = dsize_constants_in[0];
+	int input_dim = d_int_constants[0];
 	// Parameters used to pair points to calculate secants
 	int i = idx % (n-1);
 	int j = (idx - i)/(n-1);
@@ -84,23 +88,59 @@ __global__ void calculate_secants(float * d_secants, float * dpoints_in, int * d
 }
 
 // Take a matrix and return a vector whose entries are the l2 norms of the matrix
-__global__ void calculate_col_norms(float * dprojected_secants, float * dsecant_norms, int * dsize_constants_in){
+__global__ void calculate_col_norms(float * d_matrix, float * d_col_norms, int * d_int_constants){
+	/** 
+	Takes a matrix and returns a row vector whose entries are the L2 norms of each
+	entry in the matrix.
+
+	@param d_matrix The matrix whose column norms are being calculated 
+	@param d_col_norms The row vector which stores the calculated column norms
+	@param d_int_constants An integer array that stores the dimensions of the matrix. The third
+	entry is the length of each column.
+
+	*/
+
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	int proj_dim = dsize_constants_in[2];
+	// Get the length of columns
+	int proj_dim = d_int_constants[2];
+	// Summation variable to store column norms
 	float sum = 0;
+	// Iterate down the columns, summing the squares of the entries
 	for (int i = 0; i < proj_dim; i++){
-		sum = sum + powf(dprojected_secants[idx*proj_dim + i],2);
+		sum = sum + powf(d_matrix[idx*proj_dim + i],2);
 	}
-	dsecant_norms[idx] = sqrtf(sum);
+	// Take square root of resulting sum
+	d_col_norms[idx] = sqrtf(sum);
 }
 
-// Switch two columns in the matrix
-__global__ void switch_columns(float * matrix, int * dcolumn_switch_constants){
+__global__ void switch_columns(float * d_matrix, int * d_column_switch_indices){
+	/** 
+	Takes a matrix and switches two specified columns.
+
+	@param d_matrix The matrix whose column norms are being calculated 
+	@param d_col_norms The row vector which stores the calculated column norms
+	@param d_int_constants An integer array that stores the dimensions of 
+	the matrix. The first entry is the number of rows of the matrix. The 
+	second and the third are the indices of the columns to be switched.
+
+	*/
+
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	// Initialize float to hold values from was column while the other is 
+	// copied over
 	float temp;
-	temp = matrix[(dcolumn_switch_constants[1])*dcolumn_switch_constants[0] + idx];
-	matrix[(dcolumn_switch_constants[1])*dcolumn_switch_constants[0] + idx] =  matrix[(dcolumn_switch_constants[2])*dcolumn_switch_constants[0] + idx];
-	matrix[(dcolumn_switch_constants[2])*dcolumn_switch_constants[0] + idx] = temp;
+	// Number of rows
+	int rows = d_column_switch_indices[0];
+	// Index of first column to be swapped
+	int index1 = d_column_switch_indices[1];
+	// Index of second column to be swapped
+	int index2 = d_column_switch_indices[2];
+	// Save first column as temp
+	temp = matrix[index1*rows + idx];
+	// Copy second column into first index position
+	matrix[index1*rows + idx] =  matrix[index2*rows + idx];
+	// Copy original first column into second index position
+	matrix[index2*rows + idx] = temp;
 }
 
 // Shift vector in first column of projection
@@ -111,9 +151,9 @@ __global__ void shift_first_column(float * matrix, float * projection,float * sh
 }
 
 // Normalize first column
-__global__ void normalize_first_column(float * dproj, int * dsize_constants_in){
+__global__ void normalize_first_column(float * dproj, int * d_int_constants){
 	float sum = 0;
-	int column_height = dsize_constants_in[0];
+	int column_height = d_int_constants[0];
 	for (int i = 0; i < column_height; i++){
 		sum = sum + powf(dproj[i],2);
 	}
@@ -126,10 +166,10 @@ __global__ void normalize_first_column(float * dproj, int * dsize_constants_in){
 }
 
 // Take a given matrix and turn it into an identity matrix
-__global__ void make_identity(float * didentity_matrix, int * dsize_constants_in){
+__global__ void make_identity(float * didentity_matrix, int * d_int_constants){
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	int col = idx/dsize_constants_in[2];
-	int row = idx - col*dsize_constants_in[2];
+	int col = idx/d_int_constants[2];
+	int row = idx - col*d_int_constants[2];
 	if (row == col){
 		didentity_matrix[idx] = 1.0;
 	}else{
