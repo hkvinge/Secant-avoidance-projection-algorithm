@@ -12,7 +12,7 @@ using namespace std;
 int main(int argc, char ** argv){
 
 	// Choose key parameters of SAP
-	int iterations = 10;
+	int iterations = 50;
 	float step_size = .05;
 
 	// Initialize parameters to characterize data

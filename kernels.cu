@@ -19,7 +19,7 @@ __global__ void readVec(float * d_vector){
 	which the kernel prints entries from. 
 	*/
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	printf("The entry at %d is %f\n",idx,dvector_in[idx]);
+	printf("The entry at %d is %f\n",idx,d_vector[idx]);
 }
 
 __global__ void readVecInt(int * d_vector){
@@ -117,11 +117,8 @@ __global__ void switch_columns(float * d_matrix, int * d_column_switch_indices){
 	/** 
 	Takes a matrix and switches two specified columns.
 
-	@param d_matrix The matrix whose column norms are being calculated 
-	@param d_col_norms The row vector which stores the calculated column norms
-	@param d_int_constants An integer array that stores the dimensions of 
-	the matrix. The first entry is the number of rows of the matrix. The 
-	second and the third are the indices of the columns to be switched.
+	@param d_matrix The matrix whose columns are being switched.
+	@param d_column_switch_indices The indices of the columns to be switched.
 
 	*/
 
@@ -136,44 +133,82 @@ __global__ void switch_columns(float * d_matrix, int * d_column_switch_indices){
 	// Index of second column to be swapped
 	int index2 = d_column_switch_indices[2];
 	// Save first column as temp
-	temp = matrix[index1*rows + idx];
+	temp = d_matrix[index1*rows + idx];
 	// Copy second column into first index position
-	matrix[index1*rows + idx] =  matrix[index2*rows + idx];
+	d_matrix[index1*rows + idx] =  d_matrix[index2*rows + idx];
 	// Copy original first column into second index position
-	matrix[index2*rows + idx] = temp;
+	d_matrix[index2*rows + idx] = temp;
 }
 
-// Shift vector in first column of projection
-__global__ void shift_first_column(float * matrix, float * projection,float * shortest_secant, float * dalgo_constant){
+__global__ void shift_first_column(float * d_new_matrix, float * d_old_matrix, float * d_new_column, float * d_algo_constants){
+	/** 
+	Takes as input a matrix and shifted the first column by replacing it by
+	a convex combination of the first column and a new column.
+
+	@param d_new_matrix The output matrix with shifted column. 
+	@param d_old_matrix The input matrix whose first column is being shifted.
+	@param d_new_column The column vector that will be used to shift the first
+	column of d_matrix.
+	@param d_algo_constants A float array used to store the parameter controling the 
+	convex combination.
+
+	*/
+
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
-	float alpha = dalgo_constant[0];
-	matrix[idx] = (1.0-alpha)*projection[idx] + alpha*(shortest_secant[idx] - projection[idx]);
+	// The parameter that controls how much the new column will be shifted by
+	float alpha = d_algo_constants[0];
+	// Shift entries of the first column of the matrix
+	d_new_matrix[idx] = (1.0-alpha)*d_old_matrix[idx] + alpha*(d_new_column[idx] - d_old_matrix[idx]);
 }
 
-// Normalize first column
-__global__ void normalize_first_column(float * dproj, int * d_int_constants){
+__global__ void normalize_first_column(float * d_matrix, int * d_int_constants){
+	/** 
+	Kernel that normalizes the first column vector of a matrix.
+	
+	@param d_matrix The matrix whose first column will be normalized. 
+	@param d_int_constants An integer array whose first entry is the number of rows
+	of the matrix.
+
+	*/
+	
+	// Variable to hold sum of squares of entries of the first column
 	float sum = 0;
+	// Variable to hold the height of the column to be normalized.
 	int column_height = d_int_constants[0];
+	// Sum squares of entries of the first column
 	for (int i = 0; i < column_height; i++){
-		sum = sum + powf(dproj[i],2);
+		sum = sum + powf(d_matrix[i],2);
 	}
 	sum = sqrtf(sum);
+	// As long as norm is not zero, divide all entries in first column by 
+	// the first column norm
 	if (sum != 0.0){
 		for (int i = 0; i < column_height; i++){
-			dproj[i] = (1/sum)*dproj[i];
+			d_matrix[i] = (1/sum)*d_matrix[i];
 		}
 	}	
 }
 
-// Take a given matrix and turn it into an identity matrix
-__global__ void make_identity(float * didentity_matrix, int * d_int_constants){
+__global__ void make_identity(float * d_matrix, int * d_int_constants){
+	/** 
+	Kernel that takes a matrix and sets it as the identity matrix.
+	
+	@param d_matrix The matrix which will be set as the identity matrix.. 
+	@param d_int_constants An integer array that holds the dimenison of d_matrix.
+
+	*/
+	
 	int idx = blockIdx.x*blockDim.x + threadIdx.x;
+	// The column number of the matrix
 	int col = idx/d_int_constants[2];
+	// The row number of the matrix
 	int row = idx - col*d_int_constants[2];
+	// If the column/row number correspond to a diagonal element
+	// then set existing entry to 1, otherwise set it to 0.
 	if (row == col){
-		didentity_matrix[idx] = 1.0;
+		d_matrix[idx] = 1.0;
 	}else{
-		didentity_matrix[idx] = 0.0;
+		d_matrix[idx] = 0.0;
 	}
 }
 
