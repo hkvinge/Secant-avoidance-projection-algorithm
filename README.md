@@ -3,9 +3,9 @@
 The secant avoidance projection (SAP) algorithm is a secant-based dimensionality reduction algorithm. 
 Very roughly it searches for projections that preserve the spatial relations among points in a data set.
 This is equivalent to preserving the secant set of the data set. The SAP algorithm was introduced in the paper
-LINK HERE. 
+[*A GPU-Oriented Algorithm Design for Secant-Based Dimensionality Reduction*](https://ieeexplore.ieee.org/document/8452022). 
 Two slide presentations that cover aspects of SAP and other secant-based dimensionality reduction algorithms can be found
-LINK HERE and LINK HERE.
+[here](https://hkvinge.github.io/HKvinge_BigData_2018_short.pdf) and [here](https://hkvinge.github.io/HKvingeHPEC2018.pdf).
 
 The code found in this repository is written in C++/CUDA to run SAP on Nvidia GPU's. 
 When developing SAP, one of our goals was to create a dimensionality reduction algorithm 
@@ -18,7 +18,7 @@ For example, finding projections that satisfy the optimization problem in the **
 is equivalent to finding projections that are bi-Lipschitz on the data and hence both preserve the topological dimension of the data and also have a well-condition inverse on the data. 
 In particular, the SAP algorithm yields very different kinds of projections compared. 
 This is illustrated in a small example. 
-For a much more compelling example related to determining the intrinsic dimension of a data set, see slide of LINK HERE.
+For a much more compelling example related to determining the intrinsic dimension of a data set, see [slide 14](https://hkvinge.github.io/HKvinge_BigData_2018_short.pdf).
 
 PICTURES
 
@@ -58,7 +58,7 @@ Thus the data in this file can be thought of as a (10 x 256) matrix (after the f
 
 The SAP algorithm tries to iteratively reach a solution to the optimization problem:
 
-<a href="https://www.codecogs.com/eqnedit.php?latex=\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" title="\text{argmax}_{P \in \text{Proj}(n,m)} \min_{s \in S} ||P^Ts||_{\ell_2}" /></a>
+-><a href="https://www.codecogs.com/eqnedit.php?latex=\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" title="\text{argmax}_{P \in \text{Proj}(n,m)} \min_{s \in S} ||P^Ts||_{\ell_2}" /></a><-
 
 Very roughly, at each iteration the SAP algorithm shifts the projection subspace so as to better capture the current secant most diminished under projection.
 The two main parameters then are the number of iterations and the step-size. 
@@ -72,7 +72,7 @@ The optimization problem shown above is non-convex and therefore one should expe
 We have experimented using both a random orthogonal initial projection and the projection obtained via principal component analysis. 
 Empirically, it seems that random projections can often find better solutions than initializations using PCA. 
 
-For a much more detailed description of the SAP algorithm see our paper LINK HERE.
+For a much more detailed description of the SAP algorithm see our paper [*A GPU-Oriented Algorithm Design for Secant-Based Dimensionality Reduction*](https://ieeexplore.ieee.org/document/8452022).
 
 # Large secant sets and noise
 
