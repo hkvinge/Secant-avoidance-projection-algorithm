@@ -20,7 +20,7 @@ In particular, the SAP algorithm yields very different kinds of projections comp
 This is illustrated in a small example. 
 For a much more compelling example related to determining the intrinsic dimension of a data set, see [slide 14](https://hkvinge.github.io/HKvinge_BigData_2018_short.pdf).
 
-PICTURES
+![alt text](
 
 *Figure: Two projections of the trigonometric moment curve TRIG CURVE HERE into 3-dimensional space. 
 The picture on the left corresponds to the projection obtained from PCA, the right from SAP.
