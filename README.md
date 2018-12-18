@@ -58,7 +58,7 @@ Thus the data in this file can be thought of as a (10 x 256) matrix (after the f
 
 The SAP algorithm tries to iteratively reach a solution to the optimization problem:
 
--><a href="https://www.codecogs.com/eqnedit.php?latex=\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" title="\text{argmax}_{P \in \text{Proj}(n,m)} \min_{s \in S} ||P^Ts||_{\ell_2}" /></a><-
+<a href="https://www.codecogs.com/eqnedit.php?latex=\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" target="_blank"><img src="https://latex.codecogs.com/gif.latex?\text{argmax}_{P&space;\in&space;\text{Proj}(n,m)}&space;\min_{s&space;\in&space;S}&space;||P^Ts||_{\ell_2}" title="\text{argmax}_{P \in \text{Proj}(n,m)} \min_{s \in S} ||P^Ts||_{\ell_2}" /></a>
 
 Very roughly, at each iteration the SAP algorithm shifts the projection subspace so as to better capture the current secant most diminished under projection.
 The two main parameters then are the number of iterations and the step-size. 
