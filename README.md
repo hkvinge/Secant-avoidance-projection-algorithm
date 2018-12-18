@@ -24,7 +24,7 @@ For a much more compelling example related to determining the intrinsic dimensio
 <img src="TrigMoment_Proj_PCA.png" alt="drawing" width="400"/> <img src="TrigMoment_Proj_SAP.png" alt="drawing" width="400"/>
 
 
-*Figure: Two projections of the trigonometric moment curve TRIG CURVE HERE into 3-dimensional space. 
+*Figure: Two projections of the trigonometric moment curve from 10-dimensional space into 3-dimensional space. 
 The picture on the left corresponds to the projection obtained from PCA, the right from SAP.
 It is visually clear that these two projections have a significantly different flavor.*
 
