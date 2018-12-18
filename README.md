@@ -21,7 +21,7 @@ This is illustrated in a small example.
 For a much more compelling example related to determining the intrinsic dimension of a data set, see [slide 14](https://hkvinge.github.io/HKvinge_BigData_2018_short.pdf).
 
 
-<img src="TrigMoment_Proj_PCA.png" alt="drawing" width="300"/> <img src="TrigMoment_Proj_SAP.png" alt="drawing" width="300"/>
+<img src="TrigMoment_Proj_PCA.png" alt="drawing" width="400"/> <img src="TrigMoment_Proj_SAP.png" alt="drawing" width="400"/>
 
 
 *Figure: Two projections of the trigonometric moment curve TRIG CURVE HERE into 3-dimensional space. 
