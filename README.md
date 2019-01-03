@@ -30,7 +30,7 @@ It is visually clear that these two projections have a significantly different f
 
 # What is in this repository?
 
-This repository contains the following files:
+This repository contains the following files for a C++/CUDA implementation of SAP:
 
 * *SAP.cu*: The SAP function as well as a little CUDA error checking code. The SAP function transfers data (both the actual data points and an initial projection and some algorithm parameters) to the GPU where the algorithm is run by making library calls to CUBLAS and CUSOLVER and also calling certain custom kernels from *kernels.cu*.
 
@@ -55,6 +55,12 @@ Data points correspond to these columns.
 The dimension of the data points (in this case 10) is the first entry of the text file. 
 The second entry is the number of points (in this case 256). 
 Thus the data in this file can be thought of as a (10 x 256) matrix (after the first two entries have been removed). 
+
+I have also provided a Python implementation of SAP. 
+
+* *secant_functions.py*: This contains two functions. One which calculates the secants of a data set *get_secants()* and one which runs the actual SAP algorithm, *SAP()*.
+
+* *SAP_example.py*: This code gives an example of how to run this implementation of SAP in Python.
 
 # Mathematical details
 
